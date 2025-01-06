@@ -1,0 +1,108 @@
+package stepdefs;
+
+import org.junit.Assert;
+import pages.PageManager;
+
+public class LoginStepDefs {
+    private PageManager pageManager;
+
+    public LoginStepDefs() {
+        // Initialize the page manager
+        this.pageManager = new PageManager();
+    }
+
+    @Given("the user is on the login page")
+    public void userIsOnLoginPage() {
+        pageManager.getLoginPage().navigateToLoginPage();
+    }
+
+    @When("the user logs in with username {string} and password {string}")
+    public void userLogsIn(String username, String password) {
+        pageManager.getLoginPage().login(username, password);
+    }
+
+    @Then("the user should see the dashboard page")
+    public void userShouldSeeDashboard() {
+        Assert.assertTrue(pageManager.getLoginPage().isDashboardVisible());
+    }
+}
+
+
+
+package pages;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class PageManager {
+    private WebDriver driver;
+    private LoginPage loginPage;
+
+    public PageManager() {
+        this.driver = new ChromeDriver(); // Example driver initialization
+    }
+
+    public LoginPage getLoginPage() {
+        if (loginPage == null) {
+            loginPage = new LoginPage(driver);
+        }
+        return loginPage;
+    }
+
+    public void closeDriver() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
+package pages;
+
+import org.openqa.selenium.WebDriver;
+import helpers.ElementFinder;
+
+public class BasePage {
+    protected WebDriver driver;
+    protected ElementFinder elementFinder;
+
+    public BasePage(WebDriver driver) {
+        this.driver = driver;
+        this.elementFinder = new ElementFinder(driver);
+    }
+
+    public void navigateTo(String url) {
+        driver.get(url);
+    }
+}
+
+
+package pages;
+
+import org.openqa.selenium.By;
+
+public class LoginPage extends BasePage {
+    private final By usernameField = By.id("username");
+    private final By passwordField = By.id("password");
+    private final By loginButton = By.id("loginButton");
+    private final By dashboardHeader = By.id("dashboard");
+
+    public LoginPage(WebDriver driver) {
+        super(driver);
+    }
+
+    public void navigateToLoginPage() {
+        navigateTo("https://example.com/login");
+    }
+
+    public void login(String username, String password) {
+        elementFinder.findElement(usernameField).sendKeys(username);
+        elementFinder.findElement(passwordField).sendKeys(password);
+        elementFinder.findElement(loginButton).click();
+    }
+
+    public boolean isDashboardVisible() {
+        return elementFinder.isElementVisible(dashboardHeader);
+    }
+}
+
+
+
