@@ -1,3 +1,18 @@
+public class ElementFinder {
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    public ElementFinder(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    public WebElement findElement(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
+}
+
+
 package stepdefs;
 
 import org.junit.Assert;
