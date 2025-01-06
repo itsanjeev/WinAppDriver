@@ -1,0 +1,80 @@
+Modernized Page Object Model Without PageFactory
+Proposed Solution:
+Transition from PageFactory to a modernized Page Object Model that eliminates its limitations by adopting custom practices for element initialization and locator management.
+1. Replace @FindBy with Custom Getter Methods
+Use custom methods to locate elements dynamically when needed. This provides more flexibility, especially for dynamic locators, and avoids the static nature of @FindBy.
+Example:
+public WebElement getElementByXPath(String dynamicXPath) {
+    return driver.findElement(By.xpath(dynamicXPath));
+}
+
+// Usage in tests:
+WebElement dynamicElement = page.getElementByXPath("//table/tr[1]/td[2]");
+Advantages:
+Reduces tight coupling of locators with code.
+Supports dynamic locators for changing web elements.
+Improves maintainability by centralizing locator logic.
+2. Implement Lazy Initialization for Web Elements
+Use lazy-loading techniques to initialize elements only when they are accessed in the test execution, improving performance.
+Example with Lazy Initialization:
+private WebElement button;
+
+public WebElement getButton() {
+    if (button == null) {
+        button = driver.findElement(By.id("button-id"));
+    }
+    return button;
+}
+
+// Usage in tests:
+page.getButton().click();
+Advantages:
+Avoids unnecessary loading of unused elements.
+Reduces memory usage for large, complex pages.
+3. Integrate Explicit Waits for Robust Element Handling
+Replace static element initialization with dynamic waits to handle elements that may take time to load.
+Example with Explicit Waits:
+public WebElement getDynamicElement(String cssSelector) {
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    return wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(cssSelector)));
+}
+
+// Usage:
+WebElement element = page.getDynamicElement(".dynamic-class");
+Advantages:
+Improves test stability by ensuring elements are interactable before actions are performed.
+Eliminates flaky tests caused by timing issues.
+4. Use Constructor-Based Dependency Injection
+Pass the WebDriver instance through constructors to ensure objects are initialized properly.
+Example:
+public class LoginPage {
+    private WebDriver driver;
+
+    public LoginPage(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    public WebElement getUsernameField() {
+        return driver.findElement(By.id("username"));
+    }
+}
+Advantages:
+Eliminates reliance on PageFactory.initElements.
+Encourages cleaner, modular, and testable code.
+5. Centralize Locators Using Constants or Enums
+Store locators in a centralized place for better maintainability and reusability.
+Example:
+public static final String LOGIN_BUTTON = "//button[@id='login']";
+
+public WebElement getLoginButton() {
+    return driver.findElement(By.xpath(LOGIN_BUTTON));
+}
+Advantages:
+Simplifies updates to locators.
+Provides better organization and reduces duplication.
+Expected Outcomes:
+Improved Performance: Elements are initialized only when needed, reducing resource overhead.
+Increased Maintainability: Locators are centralized, and the codebase is modular and flexible.
+Better Test Stability: Explicit waits and dynamic locators reduce flaky tests.
+Future-Proof Framework: Avoiding PageFactory aligns with modern Selenium practices and ensures compatibility with future updates.
+This modernized approach will make your automation framework more scalable, robust, and easier to maintain. Would you like additional examples or refinements?
