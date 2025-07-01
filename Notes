@@ -1,0 +1,366 @@
+flowchart TD
+  subgraph "MCP Client"
+    A1["LLM / Agent"]
+    A2["MCP Client Library"]
+    A1 --> A2
+  end
+
+  subgraph "Filesystem MCP Server"
+    B1["index.ts (Entry Point)"]
+    B2["@modelcontextprotocol/sdk"]
+    B3["Tool Registration"]
+    B4["Tool Handlers (read_file, write_file, etc.)"]
+    B5["Allowed Directories List"]
+    B6["StdioServerTransport"]
+    B7["Node.js fs/promises"]
+
+    B1 -->|parses args| B5
+    B1 -->|init| B2
+    B2 -->|registers| B3
+    B3 -->|calls| B4
+    B4 -->|uses| B7
+    B1 -->|starts| B6
+    B6 <--> A2
+    B4 -->|checks| B5
+  end
+
+  A2 -- "MCP Protocol (JSON-RPC over stdio)" --> B6
+
+
+
+Absolutely! Here’s a **detailed prompt** tailored for creating a Python-only MCP server repository, following the best practices and modular structure of the reference repo. You can use this prompt for yourself, your team, or an AI assistant to scaffold a new Python MCP server project for any tool or data source.
+
+---
+
+## **Prompt: Create a Modular Python MCP Server Repository**
+
+---
+
+**Goal:**  
+Create a new repository for a Model Context Protocol (MCP) server in **Python only**, following the structure and best practices of the [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) reference repo. The new repo should make it easy to add new MCP servers for different tools, APIs, or data sources, and support clean modularity, extensibility, and containerization.
+
+---
+
+### **Repository Structure**
+
+- Root-level documentation and config:
+  - `README.md` (project overview, setup, usage, contributing)
+  - `LICENSE` (MIT recommended)
+  - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
+  - `.gitignore`
+- `src/` directory containing one subfolder per MCP server:
+  - Each subfolder is a standalone server (e.g., `filesystem`, `memory`, `git`, `fetch`, etc.)
+  - Each server contains:
+    - `src/<server_name>/` (Python package for the server)
+      - `__init__.py` (main logic, tool registration)
+      - `__main__.py` (entry point, CLI)
+      - `server.py` (tool/resource definitions and handlers)
+    - `pyproject.toml` (PEP 517/518 build system and dependencies)
+    - `Dockerfile` (for containerized deployment)
+    - `README.md` (server-specific usage and API docs)
+    - `tests/` (unit/integration tests)
+- `scripts/` for utility scripts (e.g., release automation)
+
+---
+
+### **Best Practices**
+
+- Use the official [Python MCP SDK](https://github.com/modelcontextprotocol/python-sdk).
+- Each server should:
+  - Register tools with clear input/output schemas (use [pydantic](https://docs.pydantic.dev/) models)
+  - Support multiple transports (stdio, HTTP, SSE) if possible
+  - Restrict access as needed (e.g., allowed directories for filesystem)
+  - Include a Dockerfile for easy deployment
+  - Provide clear usage/configuration instructions in the README
+- Keep code modular and well-documented
+- Add tests for each tool/endpoint
+
+---
+
+### **Template Example**
+
+```
+my-mcp-servers/
+  README.md
+  LICENSE
+  CONTRIBUTING.md
+  .gitignore
+  src/
+    mytool/
+      pyproject.toml
+      Dockerfile
+      README.md
+      src/
+        mytool/
+          __init__.py
+          __main__.py
+          server.py
+      tests/
+        test_server.py
+    another_tool/
+      ...
+  scripts/
+    release.py
+```
+
+---
+
+### **Instructions for Each Server**
+
+1. **Entry Point (`__main__.py`):**  
+   - Parse command-line arguments or environment variables for configuration.
+   - Initialize the MCP server using the SDK.
+   - Register all tools/resources with input/output schemas and handler functions.
+   - Start the server with the chosen transport (stdio, HTTP, SSE).
+
+2. **Tool Definition (`server.py`):**  
+   - Each tool should have:
+     - Name and description
+     - Input schema (pydantic model)
+     - Output schema (pydantic model)
+     - Handler function (async, returns output schema)
+
+3. **Transport:**  
+   - Use stdio by default, but allow HTTP/SSE as options.
+
+4. **Testing:**  
+   - Add unit/integration tests for each tool.
+
+5. **Documentation:**  
+   - Each server’s README should include:
+     - Overview and features
+     - API/tool documentation
+     - Example usage (CLI, Docker, etc.)
+     - Configuration options
+     - Build and run instructions
+
+6. **Docker Support:**  
+   - Provide a Dockerfile for each server for easy deployment.
+
+---
+
+### **Example: Minimal Python MCP Server**
+
+**src/mytool/src/mytool/server.py**
+```python
+from mcp.server import Server
+from pydantic import BaseModel
+
+class SayHelloInput(BaseModel):
+    name: str
+
+class SayHelloOutput(BaseModel):
+    greeting: str
+
+async def say_hello_handler(input: SayHelloInput) -> SayHelloOutput:
+    return SayHelloOutput(greeting=f"Hello, {input.name}!")
+
+def serve():
+    server = Server()
+    server.register_tool(
+        name="say_hello",
+        description="Returns a greeting",
+        input_model=SayHelloInput,
+        output_model=SayHelloOutput,
+        handler=say_hello_handler,
+    )
+    server.run_stdio()
+```
+
+**src/mytool/src/mytool/__main__.py**
+```python
+from mytool.server import serve
+
+if __name__ == "__main__":
+    serve()
+```
+
+**src/mytool/pyproject.toml**
+```toml
+[project]
+name = "mytool"
+version = "0.1.0"
+dependencies = [
+    "modelcontextprotocol",
+    "pydantic"
+]
+```
+
+**src/mytool/Dockerfile**
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY src/mytool /app
+RUN pip install .
+ENTRYPOINT ["python", "-m", "mytool"]
+```
+
+---
+
+### **Checklist for New Python MCP Server Repo**
+
+- [ ] Root-level documentation and config files
+- [ ] `src/` directory with one subfolder per server
+- [ ] Each server has entry point, tool definitions, Dockerfile, README, and tests
+- [ ] Uses Python MCP SDK and follows protocol conventions
+- [ ] Clear instructions for building, running, and extending
+- [ ] Modular, extensible, and well-documented code
+
+---
+
+**End of Prompt**
+
+---
+
+You can use this prompt as a blueprint to scaffold a new Python-only MCP server repository that is clean, modular, and easy to extend for any new tool or data source! If you want a ready-to-use cookiecutter template or a more advanced example (e.g., with HTTP transport or persistent storage), just ask!
+
+
+Absolutely! Here’s an **example of the directory and file structure** for a Python-only MCP server repo, specifically modeled after the `git` server in your reference repo. This will help you visualize and replicate the structure for your own custom servers.
+
+---
+
+## **Example: Git MCP Server Directory Structure**
+
+```
+my-mcp-servers/
+  README.md
+  LICENSE
+  CONTRIBUTING.md
+  .gitignore
+  src/
+    git/
+      pyproject.toml
+      Dockerfile
+      README.md
+      src/
+        mcp_server_git/
+          __init__.py      # Main logic, tool registration, CLI entry point
+          __main__.py      # Simple entry point (calls main from __init__.py)
+          server.py        # Tool/resource definitions and handlers
+          py.typed         # (optional) for type hinting support
+      tests/
+        test_server.py     # Unit/integration tests for the server
+```
+
+---
+
+### **File/Folder Purpose**
+
+- **README.md**: Project overview, setup, usage, API docs, contributing.
+- **LICENSE**: Open source license (MIT recommended).
+- **CONTRIBUTING.md**: Guidelines for contributors.
+- **.gitignore**: Ignore Python cache, virtualenvs, etc.
+- **src/git/pyproject.toml**: Python build system and dependencies.
+- **src/git/Dockerfile**: Containerization for easy deployment.
+- **src/git/README.md**: Server-specific documentation.
+- **src/git/src/mcp_server_git/**: Python package for the Git MCP server.
+  - **__init__.py**: Main logic, tool registration, CLI entry point (often contains a `main()` function).
+  - **__main__.py**: Minimal entry point, typically just calls `main()` from `__init__.py`.
+  - **server.py**: Tool/resource definitions and handler functions.
+  - **py.typed**: (Optional) Indicates the package supports type hints.
+- **src/git/tests/**: Unit/integration tests for the server.
+
+---
+
+### **Example: Minimal Content for Each File**
+
+**src/git/src/mcp_server_git/__init__.py**
+```python
+from .server import serve
+
+def main():
+    import argparse
+    import asyncio
+
+    parser = argparse.ArgumentParser(description="MCP Git Server")
+    parser.add_argument("--repository", type=str, help="Path to Git repository")
+    args = parser.parse_args()
+    asyncio.run(serve(args.repository))
+
+if __name__ == "__main__":
+    main()
+```
+
+**src/git/src/mcp_server_git/__main__.py**
+```python
+from mcp_server_git import main
+
+main()
+```
+
+**src/git/src/mcp_server_git/server.py**
+```python
+from mcp.server import Server
+from pydantic import BaseModel
+
+class GitStatusInput(BaseModel):
+    repo_path: str
+
+class GitStatusOutput(BaseModel):
+    status: str
+
+async def git_status_handler(input: GitStatusInput) -> GitStatusOutput:
+    # Implement logic to get git status here
+    return GitStatusOutput(status="On branch main\nnothing to commit, working tree clean")
+
+async def serve(repo_path: str):
+    server = Server()
+    server.register_tool(
+        name="git_status",
+        description="Show the working tree status",
+        input_model=GitStatusInput,
+        output_model=GitStatusOutput,
+        handler=git_status_handler,
+    )
+    await server.run_stdio()
+```
+
+**src/git/pyproject.toml**
+```toml
+[project]
+name = "mcp_server_git"
+version = "0.1.0"
+dependencies = [
+    "modelcontextprotocol",
+    "pydantic"
+]
+```
+
+**src/git/Dockerfile**
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY src/mcp_server_git /app/mcp_server_git
+RUN pip install modelcontextprotocol pydantic
+ENTRYPOINT ["python", "-m", "mcp_server_git"]
+```
+
+**src/git/tests/test_server.py**
+```python
+def test_git_status():
+    # Example test for the git_status tool
+    from mcp_server_git.server import git_status_handler, GitStatusInput
+    result = asyncio.run(git_status_handler(GitStatusInput(repo_path="/tmp")))
+    assert "working tree clean" in result.status
+```
+
+---
+
+## **Summary Table: Key Points**
+
+| File/Folder                | Purpose                                                      |
+|----------------------------|--------------------------------------------------------------|
+| `src/git/pyproject.toml`   | Python dependencies and build system                         |
+| `src/git/Dockerfile`       | Containerization for deployment                              |
+| `src/git/README.md`        | Server-specific documentation                                |
+| `src/git/src/mcp_server_git/` | Python package for the server                          |
+| `__init__.py`              | Main logic, CLI entry, tool registration                     |
+| `__main__.py`              | Minimal entry point, calls main()                            |
+| `server.py`                | Tool/resource definitions and handlers                       |
+| `py.typed`                 | (Optional) Type hinting support                             |
+| `tests/`                   | Unit/integration tests                                      |
+
+---
+
+**You can use this structure as a template for any new Python MCP server you want to build!**  
+If you want a cookiecutter or script to generate this structure automatically, just ask!
