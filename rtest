@@ -1,0 +1,94 @@
+### GOAL:
+You are building an intelligent test diagnostic tool named **MCP (Model Context Protocol)**.
+
+Its purpose is to:
+- Analyze a folder that contains a Java-Selenium-Cucumber HTML report
+- Automatically detect and read the `index.html` file
+- Extract **only failed** test scenarios from the report
+- For each failure, identify:
+  - Feature name
+  - Scenario name
+  - Step where it failed
+  - Error/stack trace
+  - AI-generated root cause (e.g., bug, test data issue, locator issue)
+  - Suggested fix
+
+Finally, the MCP tool should generate a standalone **HTML report** in table format with toggle-based modals to show stack traces and AI suggestions.
+
+---
+
+### BEHAVIOR:
+👉 Work **step-by-step**.
+👉 Only proceed to the next step after successfully completing the current one.
+👉 The tool must be **smart enough to scan the folder**, locate `index.html`, and parse it automatically.
+
+---
+
+### TASKS:
+
+#### 🔹 STEP 1: Discover and Load `index.html`
+- Input: User provides a folder path (e.g., `results/`)
+- Locate the `index.html` file inside the folder
+- If not found, raise a meaningful error
+- Output: Parsed HTML DOM ready for the next step
+
+---
+
+#### 🔹 STEP 2: Extract Test Suite Summary and Failed Scenarios
+- From `index.html`, extract:
+  - Test summary: total, passed, failed, skipped
+  - Table of only **failed** scenarios, each with:
+    - Feature name
+    - Scenario name
+    - Duration / Start time
+    - Hyperlink to scenario detail file (e.g., `pages/scenario_details/scenario_2.html`)
+- Output: JSON list of failed scenarios
+
+---
+
+#### 🔹 STEP 3: Analyze Each Failed Scenario Detail File
+- Open each failed scenario's linked HTML page
+- Extract:
+  - Step where it failed
+  - Full stack trace or error message
+- Append this info to the JSON list
+
+---
+
+#### 🔹 STEP 4: AI-Powered Root Cause Analysis
+- For each failed scenario stack trace:
+  - Use an LLM (mocked or real) to:
+    - Classify failure type (e.g., script bug, test data, locator issue, infra problem)
+    - Suggest a fix or investigation step
+- Output: Update the JSON object with:
+  - `failure_type`
+  - `suggested_fix`
+
+---
+
+#### 🔹 STEP 5: Generate Final HTML Report
+- Create a standalone HTML page (`mcp_final_report.html`) that includes:
+  - A table with columns:
+    1. Feature
+    2. Scenario
+    3. Failed At Step
+    4. Potential Issue
+    5. Stack Trace (via toggle/modal)
+
+- Requirements:
+  - Each row has a “View Stack Trace” button
+  - Modal shows full error + AI explanation
+  - Design using TailwindCSS (or clean inline CSS)
+  - Final output must work standalone (no backend required)
+- Console should path for html report
+---
+
+
+### END GOAL:
+A full web-based diagnostic tool that:
+- Reads real-world Cucumber HTML reports
+- Extracts and highlights failed scenarios
+- Uses AI to explain each failure
+- Helps QA engineers quickly debug and fix tests
+
+Proceed step-by-step. Ask questions if needed or continue automatically if everything is clear.
